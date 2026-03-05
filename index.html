@@ -6,59 +6,972 @@
     <title>NetTrack Pro · Private Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { background: #0f172a; color: #e2e8f0; padding: 20px; }
-        .dashboard { max-width: 1600px; margin: 0 auto; display: grid; grid-template-columns: 280px 1fr 340px; gap: 20px; height: calc(100vh - 40px); }
-        .left-panel, .middle-panel, .right-panel { background: rgba(255,255,255,0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); border-radius: 24px; padding: 24px; }
-        /* Add all other styles from Parts 2, 3, 4 here */
-        .contact-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 20px; padding: 20px; margin-bottom: 16px; }
-        .step-pill { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 6px 14px; border-radius: 30px; font-size: 13px; color: #94a3b8; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin-right: 8px; }
-        .step-pill.completed { background: #3b82f6; color: white; }
-        .calendar-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 10px; }
-        .calendar-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.03); border-radius: 8px; cursor: pointer; }
-        .calendar-day.today { background: #3b82f6; color: white; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .dashboard {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 280px 1fr 340px;
+            gap: 20px;
+            height: calc(100vh - 40px);
+        }
+
+        /* Panel Base Styles */
+        .left-panel, .middle-panel, .right-panel {
+            background: rgba(255,255,255,0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 24px;
+            overflow-y: auto;
+        }
+
+        .left-panel { padding: 24px 16px; display: flex; flex-direction: column; }
+        .middle-panel { padding: 24px; }
+        .right-panel { padding: 24px; display: flex; flex-direction: column; gap: 24px; }
+
+        /* Left Panel Components */
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 12px;
+            margin-bottom: 32px;
+        }
+
+        .logo-icon {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-icon i { font-size: 22px; color: white; }
+
+        .logo-text {
+            font-weight: 700;
+            font-size: 20px;
+            color: white;
+        }
+
+        .logo-text span {
+            color: #3b82f6;
+            font-size: 14px;
+            font-weight: 400;
+            display: block;
+            margin-top: 2px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 14px;
+            color: #94a3b8;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .nav-item:hover { background: rgba(255,255,255,0.05); color: white; }
+        .nav-item.active { background: rgba(59,130,246,0.15); color: #3b82f6; border: 1px solid rgba(59,130,246,0.2); }
+
+        /* Market Tickers */
+        .market-tickers {
+            background: rgba(0,0,0,0.2);
+            border-radius: 20px;
+            padding: 20px;
+            margin: 24px 0;
+        }
+
+        .tickers-header {
+            display: flex;
+            justify-content: space-between;
+            color: #94a3b8;
+            font-size: 13px;
+            font-weight: 500;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+
+        .tickers-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .ticker-item {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 14px;
+        }
+
+        .ticker-symbol { font-size: 14px; font-weight: 600; color: #94a3b8; margin-bottom: 4px; }
+        .ticker-price { font-size: 18px; font-weight: 700; color: white; margin-bottom: 2px; }
+        .ticker-change { font-size: 12px; display: flex; align-items: center; gap: 4px; }
+        .ticker-change.positive { color: #4ade80; }
+        .ticker-change.negative { color: #f87171; }
+
+        /* User Profile */
+        .user-profile {
+            margin-top: auto;
+            padding: 16px 12px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: white;
+        }
+
+        .user-info { flex: 1; }
+        .user-name { font-weight: 600; font-size: 14px; color: white; }
+        .user-email { font-size: 12px; color: #3b82f6; }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 10px;
+            padding: 8px;
+            color: #94a3b8;
+            cursor: pointer;
+        }
+
+        .logout-btn:hover { background: rgba(239,68,68,0.1); color: #f87171; }
+
+        /* Middle Panel */
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .panel-header h2 { font-size: 20px; font-weight: 600; color: white; }
+
+        .add-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 40px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .add-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px -8px #3b82f6; }
+
+        .contacts-grid { display: flex; flex-direction: column; gap: 16px; }
+                /* Contact Cards */
+        .contact-card {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 20px;
+            padding: 20px;
+            transition: all 0.2s;
+        }
+
+        .contact-card:hover {
+            background: rgba(255,255,255,0.03);
+            border-color: rgba(59,130,246,0.3);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .contact-info h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .contact-title {
+            color: #94a3b8;
+            font-size: 14px;
+            margin-top: 2px;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .icon-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.05);
+            color: #94a3b8;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon-btn:hover {
+            background: rgba(59,130,246,0.1);
+            color: #3b82f6;
+            border-color: rgba(59,130,246,0.2);
+        }
+
+        .steps-container {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 16px 0;
+        }
+
+        .step-pill {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.05);
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: 13px;
+            color: #94a3b8;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .step-pill i { font-size: 12px; }
+
+        .step-pill.completed {
+            background: #3b82f6;
+            border-color: #3b82f6;
+            color: white;
+        }
+
+        .step-pill.completed i { color: white; }
+
+        .call-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .call-date {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        .outlook-badge {
+            background: rgba(0,120,212,0.2);
+            color: #3b82f6;
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: 12px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid rgba(59,130,246,0.2);
+            transition: all 0.2s;
+        }
+
+        .outlook-badge:hover {
+            background: rgba(59,130,246,0.3);
+        }
+
+        /* Right Panel Components */
+        .analytics-card {
+            background: rgba(0,0,0,0.2);
+            border-radius: 20px;
+            padding: 20px;
+        }
+
+        .analytics-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .analytics-header h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .upcoming-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .upcoming-item:last-child { border-bottom: none; }
+
+        .upcoming-info h5 {
+            font-size: 14px;
+            font-weight: 500;
+            color: white;
+            margin-bottom: 4px;
+        }
+
+        .upcoming-info p {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        .upcoming-badge {
+            background: rgba(59,130,246,0.1);
+            color: #3b82f6;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        /* Calendar */
+        .mini-calendar {
+            background: rgba(0,0,0,0.2);
+            border-radius: 20px;
+            padding: 20px;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .calendar-header h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .calendar-nav {
+            display: flex;
+            gap: 8px;
+        }
+
+        .calendar-nav button {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.05);
+            color: #94a3b8;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .calendar-nav button:hover {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .calendar-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            font-size: 12px;
+            color: #64748b;
+            margin-bottom: 10px;
+        }
+
+        .calendar-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            color: #94a3b8;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .calendar-day:hover {
+            background: rgba(59,130,246,0.1);
+            color: white;
+        }
+
+        .calendar-day.today {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .calendar-day.has-call {
+            border: 1px solid #3b82f6;
+            color: #3b82f6;
+            font-weight: 600;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: #1e293b;
+            border-radius: 28px;
+            padding: 32px;
+            width: 480px;
+            max-width: 90%;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .modal-content h2 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            color: white;
+        }
+
+        .modal-content input {
+            width: 100%;
+            padding: 14px 16px;
+            margin-bottom: 16px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 14px;
+            font-size: 15px;
+            color: white;
+        }
+
+        .modal-content input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+        }
+
+        .modal-buttons button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 40px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .save-btn {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .save-btn:hover {
+            background: #2563eb;
+        }
+
+        .cancel-btn {
+            background: rgba(255,255,255,0.03);
+            color: #94a3b8;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .cancel-btn:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .save-notification {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #10b981;
+            color: white;
+            padding: 14px 24px;
+            border-radius: 40px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+            font-size: 14px;
+            box-shadow: 0 10px 30px -10px #10b981;
+        }
     </style>
 </head>
 <body>
-    <!-- Modals and main dashboard structure from Parts 2, 3, 4 -->
-    <div class="dashboard">
-        <!-- Left Panel -->
-        <div class="left-panel">
-            <!-- Logo, nav, market tickers, user profile -->
-        </div>
-        <!-- Middle Panel -->
-        <div class="middle-panel">
-            <div class="panel-header">
-                <h2>Network Contacts</h2>
-                <button class="add-btn" id="openAddContactModal">+ Add Contact</button>
-            </div>
-            <div id="contactsPanel"></div>
-        </div>
-        <!-- Right Panel -->
-        <div class="right-panel">
-            <div id="upcomingCallsList"></div>
-            <div class="mini-calendar">
-                <h4 id="calendarMonthYear">March 2026</h4>
-                <div class="calendar-days" id="calendarDays"></div>
+        <!-- Save Notification -->
+    <div class="save-notification" id="saveNotification">
+        <i class="fas fa-check-circle"></i> Changes saved
+    </div>
+
+    <!-- Add/Edit Contact Modal -->
+    <div class="modal" id="contactModal">
+        <div class="modal-content">
+            <h2 id="modalTitle">Add New Contact</h2>
+            <input type="text" id="contactName" placeholder="Full name">
+            <input type="text" id="contactTitle" placeholder="Job title">
+            <input type="text" id="contactCall" placeholder="Next call (e.g., Mon 3:00 PM)">
+            <div class="modal-buttons">
+                <button class="save-btn" id="saveContactBtn">Save</button>
+                <button class="cancel-btn" id="cancelContactBtn">Cancel</button>
             </div>
         </div>
     </div>
 
-    <script>
-        // Consolidated JavaScript from Parts 5 and 6
+    <div class="dashboard">
+        <!-- Left Panel -->
+        <div class="left-panel">
+            <div>
+                <div class="logo-area">
+                    <div class="logo-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="logo-text">
+                        NetTrack Pro
+                        <span>private & secure</span>
+                    </div>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-item active">
+                        <i class="fas fa-home"></i> Dashboard
+                    </div>
+                    <div class="nav-item">
+                        <i class="fas fa-users"></i> Network
+                    </div>
+                    <div class="nav-item">
+                        <i class="fas fa-calendar"></i> Calendar
+                    </div>
+                    <div class="nav-item">
+                        <i class="fas fa-chart-pie"></i> Analytics
+                    </div>
+                    <div class="nav-item">
+                        <i class="fas fa-cog"></i> Settings
+                    </div>
+                </div>
+
+                <!-- Market Tickers -->
+                <div class="market-tickers">
+                    <div class="tickers-header">
+                        <span>Market Watch</span>
+                        <i class="fas fa-sync-alt" style="font-size: 12px; cursor: pointer;" onclick="refreshTickers()"></i>
+                    </div>
+                    <div class="tickers-grid" id="tickersGrid">
+                        <div class="ticker-item">
+                            <div class="ticker-symbol">GLD</div>
+                            <div class="ticker-price" id="gld-price">$195.32</div>
+                            <div class="ticker-change positive" id="gld-change">
+                                <i class="fas fa-arrow-up"></i> +0.8%
+                            </div>
+                        </div>
+                        <div class="ticker-item">
+                            <div class="ticker-symbol">VIX</div>
+                            <div class="ticker-price" id="vix-price">14.56</div>
+                            <div class="ticker-change negative" id="vix-change">
+                                <i class="fas fa-arrow-down"></i> -2.3%
+                            </div>
+                        </div>
+                        <div class="ticker-item">
+                            <div class="ticker-symbol">SPY</div>
+                            <div class="ticker-price" id="spy-price">$478.23</div>
+                            <div class="ticker-change positive" id="spy-change">
+                                <i class="fas fa-arrow-up"></i> +0.3%
+                            </div>
+                        </div>
+                        <div class="ticker-item">
+                            <div class="ticker-symbol">10Y Yield</div>
+                            <div class="ticker-price" id="bond-price">4.28%</div>
+                            <div class="ticker-change positive" id="bond-change">
+                                <i class="fas fa-arrow-up"></i> +0.02%
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Profile -->
+            <div class="user-profile" id="userProfile">
+                <div class="user-avatar" id="userAvatar">JD</div>
+                <div class="user-info">
+                    <div class="user-name" id="userName">Loading...</div>
+                    <div class="user-email" id="userEmail">loading...</div>
+                </div>
+                <div class="logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Middle Panel - Contacts -->
+        <div class="middle-panel">
+            <div class="panel-header">
+                <h2>Network Contacts</h2>
+                <button class="add-btn" id="openAddContactModal">
+                    <i class="fas fa-plus"></i> Add Contact
+                </button>
+            </div>
+            <div class="contacts-grid" id="contactsPanel"></div>
+        </div>
+                <!-- Right Panel - Analytics & Calendar -->
+        <div class="right-panel">
+            <div class="analytics-card">
+                <div class="analytics-header">
+                    <h4>Upcoming Calls</h4>
+                    <i class="fas fa-ellipsis-h" style="color: #64748b;"></i>
+                </div>
+                <div id="upcomingCallsList"></div>
+            </div>
+
+            <div class="mini-calendar">
+                <div class="calendar-header">
+                    <h4 id="calendarMonthYear">March 2026</h4>
+                    <div class="calendar-nav">
+                        <button id="prevMonth"><i class="fas fa-chevron-left"></i></button>
+                        <button id="nextMonth"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                </div>
+                <div class="calendar-weekdays">
+                    <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+                </div>
+                <div class="calendar-days" id="calendarDays"></div>
+            </div>
+
+            <div class="analytics-card">
+                <div class="analytics-header">
+                    <h4>Network Stats</h4>
+                    <i class="fas fa-chart-pie" style="color: #3b82f6;"></i>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+                    <div>
+                        <div style="font-size: 28px; font-weight: 700; color: white;" id="totalContacts">0</div>
+                        <div style="font-size: 12px; color: #64748b;">Total Contacts</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 28px; font-weight: 700; color: #4ade80;" id="activeContacts">0</div>
+                        <div style="font-size: 12px; color: #64748b;">Active</div>
+                    </div>
+                </div>
+                <div style="height: 4px; background: rgba(255,255,255,0.05); border-radius: 2px;">
+                    <div id="activityBar" style="height: 100%; width: 0%; background: linear-gradient(90deg, #3b82f6, #8b5cf6); border-radius: 2px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+        <script>
+        // ==================== AUTHENTICATION ====================
         const currentSession = sessionStorage.getItem('currentSession');
         if (!currentSession) window.location.href = 'index.html';
-        
+
         const session = JSON.parse(currentSession);
-        // ... (rest of your working JavaScript)
+        const userEmail = session.email;
+        const userName = session.name || userEmail.split('@')[0];
         
-        // Ensure render functions are called
-        window.onload = function() {
+        // Update UI
+        document.getElementById('userName').textContent = userName;
+        document.getElementById('userEmail').textContent = userEmail;
+        document.getElementById('userAvatar').textContent = 
+            userName.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase() || 
+            userEmail.substring(0,2).toUpperCase();
+
+        // ==================== DATA STORAGE ====================
+        const storageKey = `contacts_${btoa(userEmail)}`;
+        let contacts = JSON.parse(localStorage.getItem(storageKey)) || [
+            {
+                id: '1',
+                name: 'Alex Morgan',
+                title: 'VP of Marketing',
+                nextCall: 'Wed 2:00 PM',
+                email: false,
+                followup: false,
+                coffee: false,
+                second: false
+            },
+            {
+                id: '2',
+                name: 'Jordan Lee',
+                title: 'Financial Analyst',
+                nextCall: 'Fri 11:30 AM',
+                email: true,
+                followup: false,
+                coffee: false,
+                second: false
+            }
+        ];
+
+        let editingId = null;
+        let currentMonth = new Date().getMonth();
+        let currentYear = new Date().getFullYear();
+
+        // ==================== MARKET TICKERS ====================
+        window.refreshTickers = function() {
+            const tickers = {
+                gld: { price: (195.32 + (Math.random() * 4 - 2)).toFixed(2), change: (Math.random() * 3 - 1.5) },
+                vix: { price: (14.56 + (Math.random() * 2 - 1)).toFixed(2), change: (Math.random() * 5 - 2.5) },
+                spy: { price: (478.23 + (Math.random() * 6 - 3)).toFixed(2), change: (Math.random() * 2 - 1) },
+                bond: { price: (4.28 + (Math.random() * 0.2 - 0.1)).toFixed(2), change: (Math.random() * 0.2 - 0.1) }
+            };
+
+            document.getElementById('gld-price').textContent = `$${tickers.gld.price}`;
+            document.getElementById('vix-price').textContent = tickers.vix.price;
+            document.getElementById('spy-price').textContent = `$${tickers.spy.price}`;
+            document.getElementById('bond-price').textContent = `${tickers.bond.price}%`;
+
+            ['gld', 'vix', 'spy', 'bond'].forEach(t => {
+                const el = document.getElementById(`${t}-change`);
+                const isPositive = tickers[t].change > 0;
+                el.className = `ticker-change ${isPositive ? 'positive' : 'negative'}`;
+                el.innerHTML = `<i class="fas fa-arrow-${isPositive ? 'up' : 'down'}"></i> ${Math.abs(tickers[t].change).toFixed(1)}%`;
+            });
+        };
+        refreshTickers();
+        setInterval(refreshTickers, 30000);
+
+        // ==================== UTILITIES ====================
+        function showNotification() {
+            const n = document.getElementById('saveNotification');
+            n.style.display = 'flex';
+            setTimeout(() => n.style.display = 'none', 2000);
+        }
+
+        function saveToStorage() {
+            localStorage.setItem(storageKey, JSON.stringify(contacts));
+            showNotification();
             renderContacts();
-            renderCalendar();
             renderUpcomingCalls();
             updateStats();
+        }
+
+        function updateStats() {
+            document.getElementById('totalContacts').textContent = contacts.length;
+            const active = contacts.filter(c => c.email || c.followup || c.coffee || c.second).length;
+            document.getElementById('activeContacts').textContent = active;
+            document.getElementById('activityBar').style.width = contacts.length ? `${(active/contacts.length)*100}%` : '0%';
+        }
+                    // ==================== CONTACT RENDERING ====================
+        function renderContacts() {
+            const panel = document.getElementById('contactsPanel');
+            panel.innerHTML = '';
+
+            contacts.forEach(c => {
+                const card = document.createElement('div');
+                card.className = 'contact-card';
+                card.innerHTML = `
+                    <div class="card-header">
+                        <div>
+                            <h3>${c.name}</h3>
+                            <div class="contact-title">${c.title || 'No title'}</div>
+                        </div>
+                        <div class="card-actions">
+                            <button class="icon-btn" onclick="editContact('${c.id}')"><i class="fas fa-edit"></i></button>
+                            <button class="icon-btn" onclick="deleteContact('${c.id}')"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                    <div class="steps-container">
+                        <span class="step-pill ${c.email ? 'completed' : ''}" onclick="toggleStep('${c.id}', 'email')"><i class="far fa-envelope"></i> Email</span>
+                        <span class="step-pill ${c.followup ? 'completed' : ''}" onclick="toggleStep('${c.id}', 'followup')"><i class="fas fa-phone"></i> Follow up</span>
+                        <span class="step-pill ${c.coffee ? 'completed' : ''}" onclick="toggleStep('${c.id}', 'coffee')"><i class="fas fa-mug-hot"></i> Coffee</span>
+                        <span class="step-pill ${c.second ? 'completed' : ''}" onclick="toggleStep('${c.id}', 'second')"><i class="fas fa-redo-alt"></i> Second</span>
+                    </div>
+                    <div class="call-row">
+                        <span class="call-date"><i class="far fa-calendar-alt"></i> Next: ${c.nextCall || 'TBD'}</span>
+                        <a href="https://outlook.live.com/calendar/0/view/month?subject=Call with ${encodeURIComponent(c.name)}" target="_blank" class="outlook-badge">
+                            <i class="fab fa-microsoft"></i> Outlook
+                        </a>
+                    </div>
+                `;
+                panel.appendChild(card);
+            });
+        }
+
+        window.toggleStep = (id, step) => {
+            const c = contacts.find(c => c.id === id);
+            if (c) { c[step] = !c[step]; saveToStorage(); }
         };
+
+        window.deleteContact = (id) => {
+            if (confirm('Delete this contact?')) {
+                contacts = contacts.filter(c => c.id !== id);
+                saveToStorage();
+            }
+        };
+
+        window.editContact = (id) => {
+            const c = contacts.find(c => c.id === id);
+            if (c) {
+                editingId = id;
+                document.getElementById('modalTitle').textContent = 'Edit Contact';
+                document.getElementById('contactName').value = c.name;
+                document.getElementById('contactTitle').value = c.title || '';
+                document.getElementById('contactCall').value = c.nextCall || '';
+                document.getElementById('contactModal').style.display = 'flex';
+            }
+        };
+
+        function openAddModal() {
+            editingId = null;
+            document.getElementById('modalTitle').textContent = 'Add New Contact';
+            document.getElementById('contactName').value = '';
+            document.getElementById('contactTitle').value = '';
+            document.getElementById('contactCall').value = '';
+            document.getElementById('contactModal').style.display = 'flex';
+        }
+
+        function saveContact() {
+            const name = document.getElementById('contactName').value.trim();
+            const title = document.getElementById('contactTitle').value.trim();
+            const call = document.getElementById('contactCall').value.trim();
+            if (!name) return alert('Name required');
+
+            if (editingId) {
+                const c = contacts.find(c => c.id === editingId);
+                if (c) { c.name = name; c.title = title; c.nextCall = call; }
+            } else {
+                contacts.push({ id: Date.now().toString(), name, title, nextCall: call || 'TBD', email: false, followup: false, coffee: false, second: false });
+            }
+            saveToStorage();
+            closeModal();
+        }
+
+        function closeModal() { document.getElementById('contactModal').style.display = 'none'; }
+
+        // ==================== UPCOMING CALLS ====================
+        function renderUpcomingCalls() {
+            const list = document.getElementById('upcomingCallsList');
+            list.innerHTML = '';
+            const upcoming = contacts.filter(c => c.nextCall && c.nextCall !== 'TBD').slice(0, 5);
+            if (!upcoming.length) {
+                list.innerHTML = '<div style="color: #64748b; text-align: center; padding: 20px;">No upcoming calls</div>';
+                return;
+            }
+            upcoming.forEach(c => {
+                const item = document.createElement('div');
+                item.className = 'upcoming-item';
+                item.innerHTML = `
+                    <div class="upcoming-info">
+                        <h5>${c.name}</h5>
+                        <p>${c.nextCall}</p>
+                    </div>
+                    <span class="upcoming-badge">${c.title?.split(' ')[0] || 'Call'}</span>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        // ==================== CALENDAR ====================
+        function renderCalendar() {
+            const grid = document.getElementById('calendarDays');
+            grid.innerHTML = '';
+            const firstDay = new Date(currentYear, currentMonth, 1);
+            const lastDay = new Date(currentYear, currentMonth + 1, 0);
+            let firstDayIndex = firstDay.getDay() - 1;
+            if (firstDayIndex < 0) firstDayIndex = 6;
+
+            for (let i = 0; i < firstDayIndex; i++) {
+                const empty = document.createElement('div');
+                empty.className = 'calendar-day';
+                empty.style.opacity = '0.3';
+                grid.appendChild(empty);
+            }
+
+            for (let d = 1; d <= lastDay.getDate(); d++) {
+                const day = document.createElement('div');
+                day.className = 'calendar-day';
+                day.textContent = d;
+                
+                const today = new Date();
+                if (currentYear === today.getFullYear() && currentMonth === today.getMonth() && d === today.getDate()) {
+                    day.classList.add('today');
+                }
+                if (d === 7 || d === 12 || d === 20) day.classList.add('has-call');
+                
+                day.onclick = () => alert(`Calls scheduled for ${currentMonth+1}/${d}/${currentYear}`);
+                grid.appendChild(day);
+            }
+
+            const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+            document.getElementById('calendarMonthYear').textContent = `${months[currentMonth]} ${currentYear}`;
+        }
+
+        function changeMonth(delta) {
+            currentMonth += delta;
+            if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+            if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+            renderCalendar();
+        }
+
+        // ==================== LOGOUT ====================
+        window.logout = function() {
+            if (confirm('Logout?')) {
+                sessionStorage.removeItem('currentSession');
+                window.location.href = 'index.html';
+            }
+        };
+
+        // ==================== INIT ====================
+        document.getElementById('openAddContactModal').onclick = openAddModal;
+        document.getElementById('saveContactBtn').onclick = saveContact;
+        document.getElementById('cancelContactBtn').onclick = closeModal;
+        document.getElementById('prevMonth').onclick = () => changeMonth(-1);
+        document.getElementById('nextMonth').onclick = () => changeMonth(1);
+        window.onclick = (e) => { if (e.target === document.getElementById('contactModal')) closeModal(); };
+
+        renderContacts();
+        renderUpcomingCalls();
+        renderCalendar();
+        updateStats();
     </script>
 </body>
 </html>
