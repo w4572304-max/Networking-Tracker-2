@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Networking Tracker - Outlook + Titles + Full Editing</title>
+    <title>Networking Tracker - Fully Editable + Outlook</title>
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
@@ -799,8 +799,7 @@
             </div>
         </div>
     </div>
-
-    <script>
+      <script>
         // Initialize data from localStorage or use defaults
         let contacts = JSON.parse(localStorage.getItem('networkingContacts')) || [
             {
@@ -1061,8 +1060,7 @@
 
             return card;
         }
-
-        // Edit contact name inline
+          // Edit contact name inline
         function editContactName(contact, span) {
             const input = document.createElement('input');
             input.type = 'text';
@@ -1121,7 +1119,7 @@
             }
         };
 
-        // Show add group to contact modal
+        // Show add group to contact
         function showAddGroupToContact(contact) {
             const availableGroups = groups.filter(g => g !== 'all' && !contact.groups.includes(g));
             if (availableGroups.length === 0) {
@@ -1180,6 +1178,13 @@
             document.getElementById('contactName').value = contact.name;
             document.getElementById('contactTitle').value = contact.title || '';
             document.getElementById('contactCall').value = contact.nextCall;
+            // Open modal for edit contact
+        function openEditContactModal(contact) {
+            currentEditingContact = contact;
+            document.getElementById('modalTitle').textContent = 'Edit Contact';
+            document.getElementById('contactName').value = contact.name;
+            document.getElementById('contactTitle').value = contact.title || '';
+            document.getElementById('contactCall').value = contact.nextCall;
             
             const select = document.getElementById('contactGroups');
             select.innerHTML = '';
@@ -1189,4 +1194,199 @@
                 option.textContent = group;
                 option.selected = contact.groups.includes(group);
                 select.appendChild(option);
-           
+            });
+            
+            document.getElementById('contactModal').style.display = 'flex';
+        }
+
+        // Save contact from modal
+        function saveContactFromModal() {
+            const name = document.getElementById('contactName').value.trim();
+            const title = document.getElementById('contactTitle').value.trim();
+            const call = document.getElementById('contactCall').value.trim();
+            const select = document.getElementById('contactGroups');
+            const selectedGroups = Array.from(select.selectedOptions).map(opt => opt.value);
+            
+            if (!name) {
+                alert('Please enter a name');
+                return;
+            }
+            
+            if (currentEditingContact) {
+                // Edit existing
+                currentEditingContact.name = name;
+                currentEditingContact.title = title;
+                currentEditingContact.groups = selectedGroups;
+                currentEditingContact.nextCall = call || 'TBD';
+            } else {
+                // Add new
+                const newContact = {
+                    id: Date.now().toString(),
+                    name: name,
+                    title: title,
+                    groups: selectedGroups,
+                    steps: { email: false, followup: false, coffee: false, second: false },
+                    nextCall: call || 'TBD'
+                };
+                contacts.push(newContact);
+            }
+            
+            saveToLocalStorage();
+            document.getElementById('contactModal').style.display = 'none';
+        }
+
+        // Cancel modal
+        function cancelModal() {
+            document.getElementById('contactModal').style.display = 'none';
+        }
+
+        // Render calendar
+        function renderCalendar() {
+            const daysGrid = document.getElementById('calendarDays');
+            daysGrid.innerHTML = '';
+            
+            const firstDay = new Date(currentYear, currentMonth, 1);
+            const lastDay = new Date(currentYear, currentMonth + 1, 0);
+            
+            // Adjust for Monday as first day (0 = Sunday, so shift)
+            let firstDayIndex = firstDay.getDay() - 1;
+            if (firstDayIndex < 0) firstDayIndex = 6; // Sunday becomes 6 (last)
+            
+            // Add empty cells for days before month starts
+            for (let i = 0; i < firstDayIndex; i++) {
+                const emptyDay = document.createElement('span');
+                emptyDay.className = 'day';
+                emptyDay.style.opacity = '0.3';
+                emptyDay.style.pointerEvents = 'none';
+                daysGrid.appendChild(emptyDay);
+            }
+            
+            // Add days of month
+            for (let d = 1; d <= lastDay.getDate(); d++) {
+                const day = document.createElement('span');
+                day.className = 'day';
+                day.textContent = d;
+                
+                // Check if today
+                const today = new Date();
+                if (currentYear === today.getFullYear() && currentMonth === today.getMonth() && d === today.getDate()) {
+                    day.classList.add('today');
+                }
+                
+                // Check if any calls on this day (simplified - marks 7th, 12th, 20th as examples)
+                if (d === 7 || d === 12 || d === 20) {
+                    day.classList.add('has-call');
+                }
+                
+                day.onclick = () => {
+                    alert(`Calls scheduled for ${currentMonth+1}/${d}/${currentYear}`);
+                };
+                
+                daysGrid.appendChild(day);
+            }
+        }
+
+        // Change month
+        function changeMonth(direction) {
+            currentMonth += direction;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            } else if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            document.getElementById('currentMonthYear').textContent = `${monthNames[currentMonth]} ${currentYear}`;
+            renderCalendar();
+        }
+             // Render upcoming calls
+        function renderUpcomingCalls() {
+            const upcomingList = document.getElementById('upcomingCallsList');
+            upcomingList.innerHTML = '';
+            
+            // Sort contacts by nextCall (simplified - just show first 5)
+            const sortedContacts = [...contacts].sort((a, b) => {
+                if (a.nextCall === 'TBD') return 1;
+                if (b.nextCall === 'TBD') return -1;
+                return a.nextCall.localeCompare(b.nextCall);
+            });
+            
+            sortedContacts.slice(0, 5).forEach(contact => {
+                const item = document.createElement('div');
+                item.className = 'upcoming-item';
+                
+                const infoDiv = document.createElement('div');
+                infoDiv.className = 'upcoming-info';
+                
+                const timeSpan = document.createElement('span');
+                timeSpan.innerHTML = `<i class="far fa-clock"></i> ${contact.nextCall}`;
+                
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = contact.name;
+                
+                infoDiv.appendChild(timeSpan);
+                infoDiv.appendChild(nameSpan);
+                
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'upcoming-actions';
+                
+                const editBtn = document.createElement('button');
+                editBtn.className = 'edit-call-btn';
+                editBtn.innerHTML = '<i class="fas fa-edit"></i>';
+                editBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    openEditContactModal(contact);
+                };
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete-call-btn';
+                deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+                deleteBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    deleteContact(contact.id);
+                };
+                
+                actionsDiv.appendChild(editBtn);
+                actionsDiv.appendChild(deleteBtn);
+                
+                item.appendChild(infoDiv);
+                item.appendChild(actionsDiv);
+                
+                upcomingList.appendChild(item);
+            });
+        }
+
+        // Add call button
+        function addNewCall() {
+            openAddContactModal();
+        }
+
+        // Initialize everything
+        function init() {
+            renderAll();
+            
+            // Set up event listeners
+            document.getElementById('openAddContactModal').onclick = openAddContactModal;
+            document.getElementById('addGroupBtn').onclick = addNewGroup;
+            document.getElementById('saveContactBtn').onclick = saveContactFromModal;
+            document.getElementById('cancelContactBtn').onclick = cancelModal;
+            document.getElementById('addCallBtn').onclick = addNewCall;
+            document.getElementById('prevMonth').onclick = () => changeMonth(-1);
+            document.getElementById('nextMonth').onclick = () => changeMonth(1);
+            
+            // Close modal if clicked outside
+            window.onclick = (event) => {
+                const modal = document.getElementById('contactModal');
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            };
+        }
+
+        // Start the app when page loads
+        window.onload = init;
+    </script>
+</body>
+</html>
